@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct MainPage: View {
-    @StateObject private var storage = Storage()
-    @State var newProjectName = ""
+    @StateObject private var storage = MainController()
+    @State private var newProjectName = ""
     @State private var isNewProjectCellShown = false
     @FocusState private var isFocusedNewProjectTextField: Bool
     
-    fileprivate func cancelButton() -> some View {
+    private func cancelButton() -> some View {
         return Button(
             action: {
                 newProjectName = ""
@@ -36,7 +36,7 @@ struct MainPage: View {
         )
     }
     
-    fileprivate func newProjectButton() -> some View {
+    private func newProjectButton() -> some View {
         return Button(
             action: {
                 isNewProjectCellShown = true
@@ -57,7 +57,7 @@ struct MainPage: View {
         )
     }
     
-    fileprivate func addNewProjectView() -> some View {
+    private func addNewProjectView() -> some View {
         return VStack {
             HStack {
                 TextField("Enter name", text: $newProjectName)
@@ -66,6 +66,7 @@ struct MainPage: View {
                         if (!newProjectName.isEmpty) {
                             storage.projects.append(Project(name: newProjectName))
                             newProjectName = ""
+                            storage.saveProjects()
                         }
                         isNewProjectCellShown = false
                         isFocusedNewProjectTextField = false
@@ -79,7 +80,7 @@ struct MainPage: View {
             ZStack {
                 List {
                     ForEach ($storage.projects) { $project in
-                        NavigationLink("\(project.name)", destination: TaskListView(project: $project))
+                        NavigationLink("\(project.name)", destination: TaskListView(title: "\(project.name)"))
                     }
                     .onDelete(perform: deleteProject)
                     .listRowSeparator(.hidden)
@@ -103,11 +104,12 @@ struct MainPage: View {
                     .padding()
                 }
             }
-        }
+        }.onAppear(perform: storage.loadProjects)
     }
     
     private func deleteProject(at offset: IndexSet) {
         storage.projects.remove(atOffsets: offset)
+        storage.saveProjects()
     }
 }
 

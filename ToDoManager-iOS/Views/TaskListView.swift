@@ -9,12 +9,40 @@ import SwiftUI
 import CoreData
 
 struct TaskListView: View {
-    @Binding var project: Project
+    @StateObject private var storage = MainController()
+    @State var title = ""
+    @State var newTaskName: String = ""
+    @State var isNewTaskCellShown: Bool = false
+    @FocusState private var isFocusedNewTaskTextField: Bool
     
-    fileprivate func newTaskButton() -> some View {
+    fileprivate func cancelButton() -> some View {
         return Button(
             action: {
-                project.tasks.append(Task(description: "New Task"))
+                newTaskName = ""
+                isNewTaskCellShown = false
+                isFocusedNewTaskTextField = false
+            },
+            label: {
+                Text("Cancel")
+                    .font(.system(.title3))
+                    .foregroundColor(Color.white)
+            }
+        )
+        .frame(width: 110, height: 40)
+        .background(Color.blue)
+        .cornerRadius(38.5)
+        .shadow(color: Color.black.opacity(0.3),
+                radius: 3,
+                x: 3,
+                y: 3
+        )
+    }
+    
+    private func newTaskButton() -> some View {
+        return Button(
+            action: {
+                isNewTaskCellShown = true
+                isFocusedNewTaskTextField = true
             },
             label: {
                 Image(systemName: "plus")
@@ -31,20 +59,47 @@ struct TaskListView: View {
         )
     }
     
+    private func addNewTaskView() -> some View {
+        return VStack {
+            HStack {
+                TextField("Enter name", text: $newTaskName)
+                    .focused($isFocusedNewTaskTextField)
+                    .onSubmit {
+                        if (!newTaskName.isEmpty) {
+                            storage.tasks.append(Task(name: newTaskName))
+                            newTaskName = ""
+                        }
+                        isNewTaskCellShown = false
+                        isFocusedNewTaskTextField = false
+                    }
+            }
+        }
+    }
+    
     var body: some View {
         ZStack {
             List {
-                ForEach (project.tasks) { task in
-                    Text(task.description)
+                ForEach (storage.tasks) { task in
+                    Text(task.name)
                 }
                 .onDelete(perform: removeItems)
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                if isNewTaskCellShown {
+                    addNewTaskView()
+                        .listRowBackground(Color.clear)
+                }
             }
-            .navigationTitle(project.name)
+            .navigationTitle(title)
             VStack {
                 Spacer()
                 HStack {
                     Spacer()
-                    newTaskButton()
+                    if !isNewTaskCellShown {
+                        newTaskButton()
+                    } else {
+                        cancelButton()
+                    }
                 }
                 .padding()
             }
@@ -52,6 +107,6 @@ struct TaskListView: View {
     }
     
     private func removeItems(at offset: IndexSet) {
-        project.tasks.remove(atOffsets: offset)
+        storage.tasks.remove(atOffsets: offset)
     }
 }
