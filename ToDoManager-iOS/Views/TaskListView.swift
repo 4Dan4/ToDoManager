@@ -68,6 +68,7 @@ struct TaskListView: View {
                         if (!newTaskName.isEmpty) {
                             storage.tasks.append(Task(name: newTaskName))
                             newTaskName = ""
+                            storage.saveNotes()
                         }
                         isNewTaskCellShown = false
                         isFocusedNewTaskTextField = false
@@ -104,9 +105,11 @@ struct TaskListView: View {
                 .padding()
             }
         }
+        .onAppear(perform: storage.loadTasks)
     }
     
     private func removeItems(at offset: IndexSet) {
         storage.tasks.remove(atOffsets: offset)
+        storage.saveNotes()
     }
 }

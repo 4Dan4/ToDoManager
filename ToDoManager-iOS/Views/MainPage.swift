@@ -104,7 +104,8 @@ struct MainPage: View {
                     .padding()
                 }
             }
-        }.onAppear(perform: storage.loadProjects)
+        }
+        .onAppear(perform: storage.loadProjects)
     }
     
     private func deleteProject(at offset: IndexSet) {
