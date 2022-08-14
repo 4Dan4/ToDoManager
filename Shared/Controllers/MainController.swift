@@ -31,7 +31,7 @@ final class MainController: ObservableObject {
         }
     }
     
-    func saveNotes() {
+    func saveTasks() {
         UserDefaults.standard.set(try? PropertyListEncoder().encode(tasks), forKey: taskKey)
     }
     

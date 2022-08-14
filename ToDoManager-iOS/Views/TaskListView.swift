@@ -9,11 +9,12 @@ import SwiftUI
 import CoreData
 
 struct TaskListView: View {
-    @StateObject private var storage = MainController()
+    @ObservedObject private var storage = MainController()
     @State var title = ""
     @State var newTaskName: String = ""
     @State var isNewTaskCellShown: Bool = false
     @FocusState private var isFocusedNewTaskTextField: Bool
+    @State private var selection: Task.ID?
     
     fileprivate func cancelButton() -> some View {
         return Button(
@@ -68,7 +69,7 @@ struct TaskListView: View {
                         if (!newTaskName.isEmpty) {
                             storage.tasks.append(Task(name: newTaskName))
                             newTaskName = ""
-                            storage.saveNotes()
+                            storage.saveTasks()
                         }
                         isNewTaskCellShown = false
                         isFocusedNewTaskTextField = false
@@ -78,10 +79,19 @@ struct TaskListView: View {
     }
     
     var body: some View {
+        
+        
         ZStack {
-            List {
-                ForEach (storage.tasks) { task in
-                    Text(task.name)
+            List () {
+                ForEach ($storage.tasks) { $item in
+                    SelectionCell(item: $item, selectedItem: $selection)
+                        .onTapGesture {
+                            if let ndx = storage.tasks.firstIndex(where: { $0.id == selection}) {
+                                storage.tasks[ndx].isDone = false
+                        }
+                        selection = item.id
+                            item.isDone = true
+                    }
                 }
                 .onDelete(perform: removeItems)
                 .listRowSeparator(.hidden)
@@ -92,6 +102,8 @@ struct TaskListView: View {
                 }
             }
             .navigationTitle(title)
+            .listStyle(.plain)
+//            .toolbar {EditButton()}
             VStack {
                 Spacer()
                 HStack {
@@ -110,6 +122,23 @@ struct TaskListView: View {
     
     private func removeItems(at offset: IndexSet) {
         storage.tasks.remove(atOffsets: offset)
-        storage.saveNotes()
+        storage.saveTasks()
+    }
+}
+
+struct SelectionCell: View {
+
+    @Binding var item: Task
+    @Binding var selectedItem: Task.ID?
+
+    var body: some View {
+        HStack {
+            Text(item.name)
+            Spacer()
+            if item.id == selectedItem {
+                Image(systemName: "checkmark")
+                    .foregroundColor(.accentColor)
+            }
+        }
     }
 }

@@ -91,6 +91,7 @@ struct MainPage: View {
                     }
                 }
                 .navigationTitle("Projects")
+                .listStyle(.plain)
                 VStack {
                     Spacer()
                     HStack {
